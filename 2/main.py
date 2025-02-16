@@ -10,6 +10,9 @@ def accuracy(x_old, x):
         errors.append(math.fabs(x[i] - x_old[i]))
     return errors
 
+def error(x, x_star):
+    return accuracy(x, x_star)
+
 def res(A, x, b):
     return (np.matrix(A) * np.matrix(x).T - np.matrix(b).T).ravel().tolist()[0]
 
@@ -46,19 +49,25 @@ if __name__ == '__main__':
     n = 0
     A = []
     b = []
+    x_star = []
     with open('in.txt', 'r') as file:
         n = int(file.readline())
         for i in range(n):
-            row = list(map(int, file.readline().split(' ')))
+            row = list(map(float, file.readline().split(' ')))
             A.append(row[:3])
             b.append(int(row[3]))
+        x_star = list(map(float, file.readline().split(' ')))
     if not check_matrix(A):
         print('Invalid matrix.')
         exit(1)
     x, ni, se, ev, by_e, r_vec, r = solve_zeidel(A, b, nmax, e)
+    err_vec = error(x, x_star)
+    err = norm(err_vec)
+
     print()
     print(f'Численное решение: {x}')
     print(f'Точность: {se}, по компонентам: {ev}')
+    print(f'Погрешность: {err}, по компонентам: {err_vec}')
     print(f'Количество итераций: {ni}')
     if by_e:
         print(f'Выход по точности')
