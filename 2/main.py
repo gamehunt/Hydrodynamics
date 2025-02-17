@@ -1,21 +1,26 @@
 import numpy as np
 import math
 
+# Функция для вычисления нормы
 def norm(x):
     return max(map(math.fabs, x))
 
+# Функция для вычисления точности
 def accuracy(x_old, x):
     errors = []
     for i in range(len(x)):
         errors.append(math.fabs(x[i] - x_old[i]))
     return errors
 
+# Функция для вычисления погрешности (по сути делает то же самое, но для наглядности)
 def error(x, x_star):
     return accuracy(x, x_star)
 
+# Функция для вычисления вектора невязки
 def res(A, x, b):
     return (np.matrix(A) * np.matrix(x).T - np.matrix(b).T).ravel().tolist()[0]
 
+# Решение системы методом Зейделя
 def solve_zeidel(A, b, nmax, e):
     n = len(b)
     x = [1] * n
@@ -25,6 +30,7 @@ def solve_zeidel(A, b, nmax, e):
     e_flag = False
     while iter < nmax and not e_flag:
         x_old = x.copy()
+        # Непосредственно итерация происходит внутри этого цикла
         for i in range(n):
             x[i] = b[i] / A[i][i]
             for j in range(n):
@@ -39,6 +45,7 @@ def solve_zeidel(A, b, nmax, e):
     r = res(A, x, b)
     return x, iter, e_cur, e_vec, e_flag, r, norm(r)
 
+# Проверка симметричности и положительной определённости
 def check_matrix(A):
     x = np.matrix(A)
     return np.allclose(x, x.T) and np.all(np.linalg.eigvals(x) > 0)
@@ -50,6 +57,7 @@ if __name__ == '__main__':
     A = []
     b = []
     x_star = []
+    # Разбор файла
     with open('in.txt', 'r') as file:
         n = int(file.readline())
         for i in range(n):
