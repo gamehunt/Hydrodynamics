@@ -30,6 +30,7 @@ def solve(n):
         xi.append(_xi)
         a = B / (C - A * ai[i - 1])
         b = (phi(_xi) + A * bi[i - 1]) / (C - A * ai[i-1])
+
         ai.append(a)
         bi.append(b)
 
@@ -45,13 +46,49 @@ def solve(n):
 
     return xi, yi
 
-def make_plot(i, xs, ys, title):
-    plt.subplot(2, 1, i)
-    plt.title(title)
+def solve_opt1(n):
+    mu1 = 10
+    mu2 = 100
 
-    if i > 1:
-        plt.xlabel("x")
-    plt.ylabel("y")
+    kappa1 = kappa2 = 0
+
+    h = 1 / n
+
+    hs = h ** 2 / 12
+
+    A = 12 / (h ** 2)
+    B = 12 / (h ** 2)
+    C = 24 / (h ** 2) + 5
+
+    ai = [kappa1]
+    bi = [mu1]
+
+    xi = [0]
+
+    for i in range(1, n):
+        _xi = i * h
+        xi.append(_xi)
+        a = 1 / ((hs * 5 - ai[i - 1]) + 2)
+        # a = B / (C - A * ai[i - 1])
+        b = (hs * phi(_xi) + bi[i - 1]) * a
+        ai.append(a)
+        bi.append(b)
+
+    xi.append(n * h)
+
+    yn = mu2
+    yi = [yn]
+
+    for i in range(n - 1, -1, -1):
+        yi.append(ai[i] * yi[n - i - 1] + bi[i])
+
+    yi = yi[::-1]
+
+    return xi, yi
+
+def make_plot(i, xs, ys, title):
+    plt.subplot(3, 1, i)
+    plt.title(title)
 
     # plt.xticks(np.arange(0, 1, 1 / n))
     plt.yticks(np.arange(0, 110, 10))
@@ -77,13 +114,37 @@ if __name__ == '__main__':
         vxs, vys = solve(n)
         print(f'z = {z(vxs, vys)}')
 
+        vxs_opt, vys_opt = solve_opt1(n)
+        print(f'z_opt = {z(vxs_opt, vys_opt)}')
+
         make_plot(1, uxs, uys, 'U(x)')
         make_plot(2, vxs, vys, 'V(x)')
+        make_plot(3, vxs_opt, vys_opt, 'V(x) (Opt 1)')
+
         plt.show()
     else:
         n = 10
+        ns = []
+        zs = []
+        zs_opt = []
         while n <= 10000000:
             vxs, vys = solve(n)
-            print(f'n = {n}, z = {z(vxs, vys)}')
+            vxs_opt, vys_opt = solve_opt1(n)
+            zv = z(vxs, vys)
+            zv_opt = z(vxs_opt, vys_opt)
+            print(f'n = {n}, z = {zv}, z_opt = {zv_opt}')
+            ns.append(n)
+            zs.append(zv)
+            zs_opt.append(zv_opt)
             n = n * 10
+
+        plt.yscale('log')
+        plt.plot(np.array(ns), np.array(zs), label = 'original')
+        plt.plot(np.array(ns), np.array(zs_opt), label = 'optimized')
+        plt.legend(loc="upper left")
+        plt.grid()
+        plt.show()
+
+
+
 
