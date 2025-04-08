@@ -3,41 +3,23 @@ import tabulate
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Метод Зейделя
+
 def mu(i, j, grid):
-    x = i * grid.h
-    y = j * grid.k
-
-    if i == 0 and j >= grid.m // 4:
-        return y ** 2
-
-    if i == grid.n:
-        return y ** 2 + 4
-
-    if j == grid.m // 4 and i <= grid.n // 2:
-        return x ** 2 + 0.0625
-
-    if j == grid.m:
-        return x ** 2 + 1
-
-    if i == grid.n // 2 and j < grid.m // 4:
-        return y ** 2 + 1
-
-    if j == 0 and i >= grid.n // 2:
-        return x ** 2
-
-    if j < grid.m // 4 and i < grid.n // 2:
-        return np.nan
-
     return 0
 
 def f(i, j, grid):
-    return -4
+    x = i * grid.h
+    y = j * grid.k
+    r = (x - 0.5)**2 + (y - 0.5)**2
+    e = math.exp(-grid.b * r ** 2)
+    return grid.A * e
 
 def u(x, y):
-    return x**2 + y**2
+    return 0
 
 class Grid:
-    def __init__(self, w, h, n, m, f, mu, u = None):
+    def __init__(self, w, h, n, m, f, mu, A = 5, b = 0, u = None):
         self.width = w
         self.height = h
         self.n = n
@@ -51,6 +33,8 @@ class Grid:
         self.grid = []
         self.f = f
         self.u = u
+        self.A = A
+        self.b = b
 
         self.accuracy = []
 
@@ -110,12 +94,7 @@ class Grid:
 
         while iterations < max_iterations and max_delta > precision:
             max_delta = -1
-            for j in range(1, self.m // 4 + 1):
-                for i in range(self.n // 2 + 1, self.n):
-                    d = update_function(i, j)
-                    if d > max_delta:
-                        max_delta = d
-            for j in range(self.m // 4 + 1, self.m):
+            for j in range(1, self.m):
                 for i in range(1, self.n):
                     d = update_function(i, j)
                     if d > max_delta:
@@ -169,7 +148,7 @@ class Grid:
         plt.show()
 
 if __name__ == '__main__':
-    grid = Grid(2, 1, 8, 8, f, mu, u)
+    grid = Grid(1, 1, 20, 20, f, mu, 5, 0)
     max_iterations = 1000
     iterations, acc, error = grid.solve(1e-14, max_iterations, True)
     print(tabulate.tabulate([['Количество итераций', f'{iterations}/{max_iterations}'], 
