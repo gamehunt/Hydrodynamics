@@ -51,6 +51,12 @@ class Grid:
         self.k_star = 1 / self.k_sq
         self.a_star = -2 * (self.h_star + self.k_star)
         self.grid = []
+        self.r = []
+        self.z = []
+        self.H = []
+        self.c = 0
+        self.d = 0
+        self.alpha = 0
         self.f = f
         self.u = u
 
@@ -66,8 +72,14 @@ class Grid:
         
         for j in range(m + 1):
             self.grid.append([0] * (n + 1))
+            self.r.append([0] * (n + 1))
+            self.z.append([0] * (n + 1))
+            self.H.append([0] * (n + 1))
             for i in range(n + 1):
                 self.set(i, j, mu(i, j, self))
+                self.r[j][i] = 0
+                self.z[j][i] = 0
+                self.H[j][i] = 0
 
     def __str__(self):
         return self.grid.__str__()
@@ -80,37 +92,70 @@ class Grid:
 
     def __update(self, i, j):
         prev = self.get(i, j)
+        new   = prev + self.alpha * self.H[j][i]
+        self.set(i, j, new)
+        return math.fabs(prev - new)
+
+    def __grid_cycle(self, func):
+        for j in range(1, self.m // 4 + 1):
+            for i in range(self.n // 2 + 1, self.n):
+                func(i, j)
+        for j in range(self.m // 4 + 1, self.m):
+            for i in range(1, self.n):
+                func(i, j)
+
+    def __calc_r(self, i, j):
+        prev = self.get(i, j)
         left  = self.h_star * self.get(i - 1, j)
         right = self.h_star * self.get(i + 1, j)
         up    = self.k_star * self.get(i, j + 1)
         down  = self.k_star * self.get(i, j - 1)
         f     = self.f(i, j, self)
-        new   = (f + left + right + up + down) / -self.a_star
-        self.set(i, j, new)
-        return math.fabs(prev - new)
+        self.r[j][i] = f + self.a_star * prev + left + right + up + down 
+        self.H[j][i] = -self.r[j][i]
 
-    def __opt_update(self, i, j):
-        prev  = self.get(i, j)
-        left  = self.get(i - 1, j)
-        right = self.get(i + 1, j)
-        up    = self.get(i, j + 1)
-        down  = self.get(i, j - 1)
-        f     = self.f(i, j, self)
-        new   = 0.4 * (f * self.k_sq + 0.25 * (left + right) + (up + down))
-        self.set(i, j, new)
-        return math.fabs(prev - new)
+    def __calc_z(self, i, j):
+        prev = self.r[j][i]
+        left  = self.h_star * self.r[j][i - 1]
+        right = self.h_star * self.r[j][i + 1]
+        up    = self.k_star * self.r[j + 1][i]  
+        down  = self.k_star * self.r[j - 1][i]
+        self.z[j][i] = self.a_star * prev + left + right + up + down 
 
-    def solve(self, precision, max_iterations, optimized = False):
+    def __calc_alpha(self, i, j):
+        if i == 1 and j == 1:
+            self.c = 0
+            self.d = 0
+        self.c += self.r[j][i] * self.r[j][i]
+        self.d += self.r[j][i] * self.z[j][i]
+
+    def __calc_beta(self, i, j):
+        self._d += self.z[j][i] * self.r[j][i]
+
+    def __reset(self):
+        for j in range(self.m + 1):
+            self.r.append([0] * (self.n + 1))
+            self.z.append([0] * (self.n + 1))
+            self.H.append([0] * (self.n + 1))
+            for i in range(self.n + 1):
+                self.set(i, j, mu(i, j, self))
+                self.r[j][i] = 0
+                self.z[j][i] = 0
+                self.H[j][i] = 0
+
+    def solve(self, precision, max_iterations):
         self.accuracy = []
 
         max_delta = precision + 1
         iterations = 0
 
         update_function = self.__update
-        if optimized:
-            update_function = self.__opt_update
 
         while iterations < max_iterations and max_delta > precision:
+            self.__grid_cycle(self.__calc_r)
+            self.__grid_cycle(self.__calc_z)
+            self.__grid_cycle(self.__calc_alpha)
+            self.alpha = self.c / self.d
             max_delta = -1
             for j in range(1, self.m // 4 + 1):
                 for i in range(self.n // 2 + 1, self.n):
@@ -135,8 +180,7 @@ class Grid:
         return iterations, max_delta, error
 
     def plot(self):
-        fig  = plt.figure(1)
-
+        fig  = plt.figure()
         ax   = fig.add_subplot(1, 1, 1)
 
         z    = np.ravel(self.grid)
@@ -153,7 +197,6 @@ class Grid:
         plt.legend()
         plt.grid()
 
-
         rect = plt.Rectangle((0, 0), 1, 0.25, linewidth=1, edgecolor='none', facecolor='black')
         ax.add_patch(rect)
 
@@ -161,8 +204,8 @@ class Grid:
 
 if __name__ == '__main__':
     grid = Grid(2, 1, 20, 20, f, mu, u)
-    max_iterations = 1000
-    iterations, acc, error = grid.solve(1e-14, max_iterations, True)
+    max_iterations = 10000
+    iterations, acc, error = grid.solve(1e-14, max_iterations)
     print(tabulate.tabulate([['Количество итераций', f'{iterations}/{max_iterations}'], 
                              ['Точность', acc], 
                              ['Погрешность', error]], 

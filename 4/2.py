@@ -20,9 +20,10 @@ def u(x, y):
     return 0
 
 class Grid:
-    def __init__(self, w, h, n, m, f, mu, k, u = None):
+    def __init__(self, w, h, n, m, f, mu, _w, k, u = None):
         self.width = w
         self.height = h
+        self.w = _w
         self.n = n
         self.m = m
         self.h = w / n
@@ -30,11 +31,15 @@ class Grid:
         self.k_sq = self.k ** 2
         self.h_star = 1 / (self.h ** 2)
         self.k_star = 1 / self.k_sq
-        self.a_star = -2 * (self.h_star + self.k_star)
+        self.a_star = 2 * (self.h_star + self.k_star)
         self.grid = []
         self.f = f
         self.u = u
         self._k = k
+
+        if(self.w > 2 or self.w < 0):
+            print('Invalid w.')
+            exit(1)
 
         self.accuracy = []
 
@@ -67,30 +72,19 @@ class Grid:
         up    = self.k_star * self.get(i, j + 1)
         down  = self.k_star * self.get(i, j - 1)
         f     = self.f(i, j, self)
-        new   = (f + left + right + up + down) / -self.a_star
+        new   = self.w * (left + right + up + down)
+        new  += (1 - self.w) * self.a_star * prev + self.w * f
+        new  /= self.a_star
         self.set(i, j, new)
         return math.fabs(prev - new)
 
-    def __opt_update(self, i, j):
-        prev  = self.get(i, j)
-        left  = self.get(i - 1, j)
-        right = self.get(i + 1, j)
-        up    = self.get(i, j + 1)
-        down  = self.get(i, j - 1)
-        f     = self.f(i, j, self)
-        new   = 0.4 * (f * self.k_sq + 0.25 * (left + right) + (up + down))
-        self.set(i, j, new)
-        return math.fabs(prev - new)
-
-    def solve(self, precision, max_iterations, optimized = False):
+    def solve(self, precision, max_iterations):
         self.accuracy = []
 
         max_delta = precision + 1
         iterations = 0
 
         update_function = self.__update
-        if optimized:
-            update_function = self.__opt_update
 
         while iterations < max_iterations and max_delta > precision:
             max_delta = -1
@@ -133,9 +127,9 @@ class Grid:
         plt.show()
 
 if __name__ == '__main__':
-    grid = Grid(1, 1, 20, 20, f, mu, 1)
-    max_iterations = 1000
-    iterations, acc, error = grid.solve(1e-14, max_iterations, True)
+    grid = Grid(1, 1, 20, 20, f, mu, 1.5, 1)
+    max_iterations = 10000
+    iterations, acc, error = grid.solve(1e-14, max_iterations)
     print(tabulate.tabulate([['Количество итераций', f'{iterations}/{max_iterations}'], 
                              ['Точность', acc], 
                              ['Погрешность', error]], 
