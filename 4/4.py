@@ -2,15 +2,18 @@ import math
 import tabulate
 import numpy as np
 import matplotlib.pyplot as plt
-import pyopencl as cl
 
-# Метод сопряженных градиентов
+# Метод Зейделя
 
 def mu(i, j, h, k):
     x = i * h
     y = j * k
+    if i > 6 and j < 2:
+        return 0
     if i == 0:
         return y
+    if i == 8:
+        return 2 * (y - 1)
     if j == 4:
         return 2
     return 0
@@ -53,12 +56,14 @@ if __name__ == '__main__':
                 old   = grid[j][i]
                 if (i, j) in bad_nodes:
                     if i == 6:
+                        right = 0
                         xw = math.sqrt(1 - (j * k) ** 2) + 4
                         x  = i * h
                         alpha = (xw - x) / h
                         a_star_corrected = -2 * (k_star + h_star / alpha )
                         grid[j][i] = (up + down + 2 * (left / (1 + alpha) + right / (alpha * (1 + alpha)))) / -a_star_corrected
                     else:
+                        down = 0
                         yw = math.sqrt(1 - (i * h - 4) ** 2)
                         y  = j * k
                         beta = (y - yw) / k
@@ -76,14 +81,25 @@ if __name__ == '__main__':
 
     X, Y  = np.meshgrid(x, y)
 
-    fig  = plt.figure(1)
-    ax   = fig.add_subplot(1, 1, 1, projection='3d')
+    fig, ax = plt.subplots()
 
     z    = np.ravel(grid)
     Z    = z.reshape(X.shape)
 
-    ax.plot_wireframe(X, Y, Z, color='b', rstride = 1, cstride = 1, label='~u(x, y)')     
-    ax.scatter(X, Y, Z, color = 'red')
+    cs = ax.contourf(X, Y, Z)     
+    cbar = fig.colorbar(cs)
+
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_xlim((0, 4))
+    ax.set_ylim((0, 2))
+    ax.xaxis.set_major_locator(plt.MultipleLocator(h))
+    ax.yaxis.set_major_locator(plt.MultipleLocator(k))
 
     plt.legend()
+    plt.grid()
+
+    circle = plt.Circle((4, 0), 1, color='black', clip_on = True)
+    ax.add_patch(circle)
+
     plt.show()

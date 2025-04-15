@@ -3,7 +3,7 @@ import tabulate
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Метод Зейделя
+# Метод Сопряженных Градиентов
 
 def mu(i, j, grid):
     x = i * grid.h
@@ -137,37 +137,26 @@ class Grid:
     def plot(self):
         fig  = plt.figure(1)
 
-        ax   = fig.add_subplot(1, 1, 1, projection='3d')
+        ax   = fig.add_subplot(1, 1, 1)
 
         z    = np.ravel(self.grid)
         Z    = z.reshape(self.X.shape)
 
-        ax.plot_wireframe(self.X, self.Y, Z, color='b', rstride = 1, cstride = 1, label='~u(x, y)')     
-        ax.scatter(self.X, self.Y, Z, color = 'red')
+        cs = ax.contourf(self.X, self.Y, Z)     
+        fig.colorbar(cs)
+
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
-        ax.set_zlabel('V')
-        # ax.set_title('~u(x, y)')
-
-        if self.u:
-            ZN = self.uv.reshape(self.X.shape)
-            # ax = fig.add_subplot(1, 2, 2, projection='3d')
-            # ax.scatter(self.X, self.Y, Z, color = 'red')
-            # ax.scatter(self.X, self.Y, ZN, color = 'green')
-            ax.plot_wireframe(self.X, self.Y, ZN, color='g', rstride = 1, cstride = 1, alpha = 0.5, label='u(x, y)')     
-            # ax.set_xlabel('X')
-            # ax.set_ylabel('Y')
-            # ax.set_zlabel('V')
-            # ax.set_title('u(x, y)')
-
-        # fig = plt.figure(2)
-        # ax  = fig.add_subplot(1, 1, 1)
-        # ax.plot(np.arange(len(self.accuracy)), self.accuracy)
-        # ax.set_ylabel('Точность')
-        # ax.set_yscale('log')
-        # ax.set_xlabel('Итерация')
+        ax.xaxis.set_major_locator(plt.MultipleLocator(self.h))
+        ax.yaxis.set_major_locator(plt.MultipleLocator(self.k))
 
         plt.legend()
+        plt.grid()
+
+
+        rect = plt.Rectangle((0, 0), 1, 0.25, linewidth=1, edgecolor='none', facecolor='black')
+        ax.add_patch(rect)
+
         plt.show()
 
 if __name__ == '__main__':
