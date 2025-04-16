@@ -48,7 +48,7 @@ def solve1(grid, a, h, tau):
 
 def solve2(grid, a, h, tau):
     for t in range(1, len(grid)):
-        for x in range(1, len(grid[t] - 1)):
+        for x in range(1, len(grid[t]) - 1):
             grid[t][x] = grid[t - 1][x] - a * tau * ((grid[t - 1][x + 1] - grid[t - 1][x - 1]) / (2 * h))
     return grid
 
