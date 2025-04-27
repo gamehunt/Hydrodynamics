@@ -162,6 +162,10 @@ if __name__ == '__main__':
             print('Doesnt converge: c = ', c)
             print(tau, hx)
             exit(1)
+    else:
+        m = int(6.5 * 20 * 10)
+        n *= 10
+        grid, hx, tau = create_grid(w, h, n, m, target, _mu)
 
     grid_solved = solvers[method - 1](grid, a, hx, tau)
 

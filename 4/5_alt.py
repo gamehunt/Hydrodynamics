@@ -2,6 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+def calc_z(u, ex):
+    return np.abs(u - ex).max() # * 1e-12
+
 def solve_poisson_gauss_seidel():
     # Параметры сетки
     nx = 20  # количество узлов по x
@@ -11,7 +14,7 @@ def solve_poisson_gauss_seidel():
 
     h_sq = 1 / dx**2
     k_sq = 1 / dy**2
-    a_star  = 2 * (h_sq + k_sq)
+    a_star  = -2 * (h_sq + k_sq)
     
     # Инициализация сетки
     u = np.zeros((ny, nx))
@@ -45,7 +48,7 @@ def solve_poisson_gauss_seidel():
         
         for j in range(1, ny-1):
             for i in range(1, nx-1):
-                u[j, i] = ((u[j, i+1] + u[j, i-1]) * h_sq + (u[j+1, i] + u[j-1, i]) * k_sq - f[j, i]) / a_star
+                u[j, i] = ((u[j, i+1] + u[j, i-1]) * h_sq + (u[j+1, i] + u[j-1, i]) * k_sq - f[j, i]) / -a_star
         
         # Обновление граничного условия Неймана на правой границе
         u[:, -1] = u[:, -2] + 2 * dx 
@@ -63,7 +66,7 @@ def solve_poisson_gauss_seidel():
         for i in range(nx):
             exact[j, i] = x[i]**2 + y[j]**2
     
-    error = np.abs(u - exact).max()
+    error = calc_z(u, exact)
     print(f"Погрешность: {error}")
     
     # Визуализация
