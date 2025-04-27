@@ -206,7 +206,7 @@ class Grid:
     def plot(self):
         fig  = plt.figure()
         ax   = fig.add_subplot(1, 1, 1)
-        ax.set_box_aspect(1.0)
+        ax.set_box_aspect(0.5)
 
         z    = np.ravel(self.grid)
         Z    = z.reshape(self.X.shape)
@@ -228,7 +228,7 @@ class Grid:
         plt.show()
 
 if __name__ == '__main__':
-    grid = Grid(2, 1, 8, 8, f, mu, u)
+    grid = Grid(2, 1, 20, 20, f, mu, u)
     max_iterations = 10000
     iterations, acc, error = grid.solve(1e-14, max_iterations)
     print(tabulate.tabulate([['Количество итераций', f'{iterations}/{max_iterations}'], 

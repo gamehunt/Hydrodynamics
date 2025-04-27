@@ -86,7 +86,7 @@ if __name__ == '__main__':
     X, Y  = np.meshgrid(x, y)
 
     fig, ax = plt.subplots()
-    ax.set_box_aspect(1.0)
+    ax.set_box_aspect(0.5)
 
     z    = np.ravel(grid)
     Z    = z.reshape(X.shape)

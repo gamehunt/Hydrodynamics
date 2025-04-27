@@ -24,7 +24,7 @@ def solve_poisson_gauss_seidel():
     
     # Правая граница: du/dn = 2x (Нейман)
     # Используем одностороннюю разность: (u[:, -1] - u[:, -2])/dx = 2x | (x = 1) = 2
-    u[:, -1] = 0# u[:, -2] + 2 * dx
+    u[:, -1] = u[:, -2] + 2 * dx
     
     # Верхняя граница: u(x, 1) = x^2 + 1 (Дирихле)
     u[-1, :] = x**2 + 1
@@ -52,9 +52,9 @@ def solve_poisson_gauss_seidel():
         
         # Проверка сходимости
         residual = np.linalg.norm(u - u_old)
-        # print(f"Точность: {residual}")
         if residual < tolerance:
             print(f"Сходимость достигнута на итерации {iteration}")
+            print(f"Точность: {residual}")
             break
     
     # Точное решение
@@ -63,7 +63,7 @@ def solve_poisson_gauss_seidel():
         for i in range(nx):
             exact[j, i] = x[i]**2 + y[j]**2
     
-    error = np.abs(u - exact).mean()
+    error = np.abs(u - exact).max()
     print(f"Погрешность: {error}")
     
     # Визуализация
